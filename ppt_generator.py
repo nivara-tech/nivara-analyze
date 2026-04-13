@@ -38,8 +38,18 @@ def _var_pct(a, b):
 
 
 def _add_slide(prs, layout_idx=6):
-    """Add a blank slide."""
-    return prs.slides.add_slide(prs.slide_layouts[layout_idx])
+    """Add a blank slide with Nivara Analyze branding."""
+    slide = prs.slides.add_slide(prs.slide_layouts[layout_idx])
+    # Bottom-right branding
+    txBox = slide.shapes.add_textbox(Inches(10.3), Inches(7.1), Inches(2.8), Inches(0.3))
+    tf = txBox.text_frame
+    p = tf.paragraphs[0]
+    p.text = "Powered by Nivara Analyze"
+    p.font.size = Pt(8)
+    p.font.color.rgb = RGBColor(0x99, 0x99, 0x99)
+    p.font.italic = True
+    p.alignment = PP_ALIGN.RIGHT
+    return slide
 
 
 def _add_title_bar(slide, title_text, subtitle_text=""):

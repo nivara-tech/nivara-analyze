@@ -589,6 +589,9 @@ HTML_TEMPLATE = """
             submitBtn.textContent = 'Analyze & Generate PPT';
         });
     </script>
+    <div style="position:fixed;bottom:16px;right:24px;font-size:11px;color:#999;font-weight:500;letter-spacing:0.5px;">
+        Powered by <span style="color:#1F4E79;font-weight:700;">Nivara Analyze</span>
+    </div>
 </body>
 </html>
 """
