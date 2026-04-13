@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Web app for Eureka Forbes P&L Analyzer.
+Nivara Analyze — AI-powered P&L Analysis.
 Upload Excel -> Get PPT back.
 """
 import os
@@ -26,7 +26,7 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eureka Forbes — P&L Analyzer</title>
+    <title>Nivara Analyze</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -336,7 +336,7 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <nav class="navbar">
-        <h1>Eureka Forbes — P&L Analyzer</h1>
+        <h1>Nivara Analyze</h1>
         <span class="badge">Beta</span>
     </nav>
 
@@ -344,8 +344,8 @@ HTML_TEMPLATE = """
         <div class="card">
             <h2>Upload P&L Statement</h2>
             <p class="subtitle">
-                Upload your monthly P&L Excel file. The tool will analyze performance vs AOP,
-                previous month, last year, and detect all outliers — then generate a presentation-ready PPT.
+                Upload your monthly P&L Excel file. Nivara Analyze will compare performance vs AOP,
+                previous month, last year, detect all outliers, and generate an AI-powered presentation-ready PPT.
             </p>
 
             <form id="uploadForm" enctype="multipart/form-data">
@@ -685,7 +685,7 @@ def sample():
 
 if __name__ == "__main__":
     print("\n" + "=" * 50)
-    print("  Eureka Forbes P&L Analyzer")
+    print("  Nivara Analyze")
     print("  http://localhost:5050")
     print("=" * 50 + "\n")
     app.run(host="0.0.0.0", port=5050, debug=True)

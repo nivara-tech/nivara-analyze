@@ -119,6 +119,17 @@ PNL_LINES = [
     ("Tax", "Rs Cr", "tax", 19),
     ("Profit After Tax", "Rs Cr", "pat", 56),
     ("PAT %", "%", "margin_pct", 12.2),
+
+    # Advent Adjusted EBITDA Bridge
+    ("Reported EBITDA", "Rs Cr", "advent", 89),
+    ("Ind AS Adjustment", "Rs Cr", "advent_adj", 4),
+    ("ESOP Cost Add-back", "Rs Cr", "advent_adj", 3),
+    ("One-time Items", "Rs Cr", "advent_adj", 2),
+    ("Advent Adjusted EBITDA", "Rs Cr", "advent_total", 98),
+    ("Advent Adjusted EBITDA %", "%", "margin_pct", 21.4),
+
+    # Gross Sales total (for big picture)
+    ("Total Gross Sales", "Rs Cr", "gross_sales_total", 520),
 ]
 
 # Months in Indian FY (Apr-Mar)
@@ -228,6 +239,19 @@ def _compute_totals(row_data):
     by_label["Tax"] = by_label["Profit Before Tax"] * 0.252  # ~25.2% effective tax
     by_label["Profit After Tax"] = by_label["Profit Before Tax"] - by_label["Tax"]
     by_label["PAT %"] = (by_label["Profit After Tax"] / ns * 100) if ns else 0
+
+    # Advent Adjusted EBITDA
+    by_label["Reported EBITDA"] = by_label["EBITDA (post allocation)"]
+    by_label["Advent Adjusted EBITDA"] = (
+        by_label["Reported EBITDA"] +
+        by_label.get("Ind AS Adjustment", 0) +
+        by_label.get("ESOP Cost Add-back", 0) +
+        by_label.get("One-time Items", 0)
+    )
+    by_label["Advent Adjusted EBITDA %"] = (by_label["Advent Adjusted EBITDA"] / ns * 100) if ns else 0
+
+    # Total Gross Sales (products + AMC + rental + spares + service)
+    by_label["Total Gross Sales"] = ns * 1.08  # ~8% credit notes approximation
 
     return by_label
 

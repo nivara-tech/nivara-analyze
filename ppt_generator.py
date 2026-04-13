@@ -225,7 +225,167 @@ def generate_ppt(analysis, output_path, insights=None):
                   yr_text, font_size=16, bold=True, color=WHITE,
                   alignment=PP_ALIGN.CENTER)
 
-    # ==================== SLIDE 2: Executive Summary ====================
+    # ==================== SLIDE 2: BIG PICTURE ====================
+    slide = _add_slide(prs)
+    _add_title_bar(slide, f"The Big Picture — {period_label}")
+
+    # Gather all big picture metrics for current month, AOP, LY, and YTD
+    bp_metrics = {
+        "Total Gross Sales": {"label": "Gross Sales"},
+        "Total Net Sales": {"label": "Net Sales"},
+        "Gross Margin": {"label": "Gross Margin"},
+        "Gross Margin %": {"label": "Gross Margin %", "is_pct": True},
+        "EBITDA (post allocation)": {"label": "EBITDA"},
+        "EBITDA %": {"label": "EBITDA Margin", "is_pct": True},
+        "Profit After Tax": {"label": "PAT"},
+        "Advent Adjusted EBITDA": {"label": "Advent Adj. EBITDA"},
+        "Advent Adjusted EBITDA %": {"label": "Advent Adj. EBITDA %", "is_pct": True},
+    }
+
+    # Big KPI cards row 1: Gross Sales, Net Sales, EBITDA, EBITDA Margin
+    def _bp_val(key):
+        return _n(a.current_month.get(key))
+
+    def _bp_aop(key):
+        return _n(a.aop_month.get(key))
+
+    def _bp_ly(key):
+        return _n(a.ly_same_month.get(key))
+
+    def _bp_ytd(key):
+        return _n(a.ytd_actual.get(key))
+
+    def _bp_ytd_aop(key):
+        return _n(a.ytd_aop.get(key))
+
+    # Row 1: Big numbers
+    row1 = [
+        ("Gross Sales", "Total Gross Sales", False),
+        ("Net Sales", "Total Net Sales", False),
+        ("Gross Margin", "Gross Margin", False),
+        ("EBITDA", "EBITDA (post allocation)", False),
+        ("Advent Adj. EBITDA", "Advent Adjusted EBITDA", False),
+    ]
+
+    for i, (title, key, is_pct) in enumerate(row1):
+        val = _bp_val(key)
+        aop = _bp_aop(key)
+        ly = _bp_ly(key)
+        ach = (val / aop * 100) if aop else 0
+        yoy = _var_pct(val, ly)
+        color = GREEN if ach >= 100 else ORANGE if ach >= 90 else RED
+        _add_kpi_card(slide, Inches(0.3 + i * 2.55), Inches(1.1), Inches(2.4), Inches(1.1),
+                      title,
+                      f"Rs {val:,.0f} Cr",
+                      f"AOP {ach:.0f}% | YoY {yoy:+.1f}%",
+                      color)
+
+    # Row 2: Margins + Growth
+    ns_val = _bp_val("Total Net Sales")
+    ns_ly = _bp_ly("Total Net Sales")
+    ns_yoy = _var_pct(ns_val, ns_ly)
+
+    gs_val = _bp_val("Total Gross Sales")
+    gs_ly = _bp_ly("Total Gross Sales")
+    gs_yoy = _var_pct(gs_val, gs_ly)
+
+    ebitda_margin = _bp_val("EBITDA %")
+    ebitda_margin_ly = _bp_ly("EBITDA %")
+
+    gm_pct_val = _bp_val("Gross Margin %")
+    gm_pct_ly = _bp_ly("Gross Margin %")
+
+    advent_margin = _bp_val("Advent Adjusted EBITDA %")
+    advent_margin_ly = _bp_ly("Advent Adjusted EBITDA %")
+
+    row2 = [
+        ("Net Sales Growth (YoY)", f"{ns_yoy:+.1f}%", f"Rs {ns_val:,.0f} Cr vs LY Rs {ns_ly:,.0f} Cr",
+         GREEN if ns_yoy > 0 else RED),
+        ("Gross Sales Growth (YoY)", f"{gs_yoy:+.1f}%", f"Rs {gs_val:,.0f} Cr vs LY Rs {gs_ly:,.0f} Cr",
+         GREEN if gs_yoy > 0 else RED),
+        ("Gross Margin %", f"{gm_pct_val:.1f}%", f"LY: {gm_pct_ly:.1f}% | Delta: {gm_pct_val - gm_pct_ly:+.1f}pp",
+         GREEN if gm_pct_val >= gm_pct_ly else RED),
+        ("EBITDA Margin", f"{ebitda_margin:.1f}%", f"LY: {ebitda_margin_ly:.1f}% | Delta: {ebitda_margin - ebitda_margin_ly:+.1f}pp",
+         GREEN if ebitda_margin >= ebitda_margin_ly else RED),
+        ("Advent Adj. EBITDA Margin", f"{advent_margin:.1f}%", f"LY: {advent_margin_ly:.1f}% | Delta: {advent_margin - advent_margin_ly:+.1f}pp",
+         GREEN if advent_margin >= advent_margin_ly else RED),
+    ]
+
+    for i, (title, value, subtitle, color) in enumerate(row2):
+        _add_kpi_card(slide, Inches(0.3 + i * 2.55), Inches(2.5), Inches(2.4), Inches(1.1),
+                      title, value, subtitle, color)
+
+    # Row 3: YTD / Full Year view
+    _add_text_box(slide, Inches(0.3), Inches(4.0), Inches(12), Inches(0.4),
+                  "YTD / FULL YEAR VIEW" if is_full_year else f"YTD (Apr–{a.review_month})",
+                  font_size=13, bold=True, color=DARK_BLUE)
+
+    ytd_items = [
+        ("YTD Gross Sales", "Total Gross Sales"),
+        ("YTD Net Sales", "Total Net Sales"),
+        ("YTD EBITDA", "EBITDA (post allocation)"),
+        ("YTD PAT", "Profit After Tax"),
+        ("YTD Advent Adj. EBITDA", "Advent Adjusted EBITDA"),
+    ]
+
+    for i, (title, key) in enumerate(ytd_items):
+        ytd_val = _bp_ytd(key)
+        ytd_aop = _bp_ytd_aop(key)
+        ach = (ytd_val / ytd_aop * 100) if ytd_aop else 0
+        color = GREEN if ach >= 100 else ORANGE if ach >= 90 else RED
+        _add_kpi_card(slide, Inches(0.3 + i * 2.55), Inches(4.5), Inches(2.4), Inches(1.0),
+                      title,
+                      f"Rs {ytd_val:,.0f} Cr",
+                      f"AOP Achieved: {ach:.0f}%",
+                      color)
+
+    # Advent EBITDA Bridge at bottom
+    _add_text_box(slide, Inches(0.3), Inches(5.8), Inches(6), Inches(0.35),
+                  "ADVENT ADJUSTED EBITDA BRIDGE", font_size=11, bold=True, color=DARK_BLUE)
+
+    bridge_items = [
+        ("Reported EBITDA", "Reported EBITDA"),
+        ("(+) Ind AS Adjustment", "Ind AS Adjustment"),
+        ("(+) ESOP Cost Add-back", "ESOP Cost Add-back"),
+        ("(+) One-time Items", "One-time Items"),
+        ("= Advent Adj. EBITDA", "Advent Adjusted EBITDA"),
+    ]
+
+    cols_br = ["Item", f"{a.review_month} {a.review_fy}", "AOP", "Var"]
+    table = _add_table(slide, Inches(0.3), Inches(6.15), Inches(8), Inches(0.3 + len(bridge_items) * 0.22),
+                       len(bridge_items) + 1, len(cols_br))
+
+    table.columns[0].width = Inches(3.0)
+    for ci in range(1, len(cols_br)):
+        table.columns[ci].width = Inches(1.65)
+
+    for ci, h in enumerate(cols_br):
+        table.cell(0, ci).text = h
+    _style_header_row(table, len(cols_br))
+
+    for ri, (display, key) in enumerate(bridge_items):
+        row_idx = ri + 1
+        is_total = "=" in display
+
+        cell = table.cell(row_idx, 0)
+        cell.text = display
+        for p in cell.text_frame.paragraphs:
+            p.font.size = Pt(8)
+            p.font.bold = is_total
+        if is_total:
+            cell.fill.solid()
+            cell.fill.fore_color.rgb = LIGHT_BLUE
+
+        actual = _n(a.current_month.get(key))
+        aop = _n(a.aop_month.get(key))
+        var = actual - aop
+
+        _style_data_cell(table.cell(row_idx, 1), actual, True, is_total)
+        _style_data_cell(table.cell(row_idx, 2), aop, True, is_total)
+        _style_data_cell(table.cell(row_idx, 3), var, True, is_total,
+                         GREEN if var > 0 else RED if var < 0 else BLACK)
+
+    # ==================== SLIDE 3: Executive Summary ====================
     slide = _add_slide(prs)
     _add_title_bar(slide, f"Executive Summary — {period_label}")
 
